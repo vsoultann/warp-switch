@@ -86,6 +86,28 @@ rules_base() {
     ip -4 rule add to $PROBE/32 lookup 5150 priority $((PRIO-50))
 }
 
+# DNS: the network's resolver is usually on the LAN (bypasses the tunnel) and
+# ISP resolvers can block sites. While WARP is on, Private DNS is set to
+# Cloudflare (DNS-over-TLS through the tunnel); the previous setting is restored
+# on down. Disable with WARP_DNS=0.
+DNSPREV="$D/dns.prev"
+dns_on() {
+    [ "${WARP_DNS:-1}" = 1 ] || return 0
+    [ -f "$DNSPREV" ] || printf '%s\n%s\n' "$(settings get global private_dns_mode)" \
+        "$(settings get global private_dns_specifier)" > "$DNSPREV"
+    settings put global private_dns_specifier one.one.one.one
+    settings put global private_dns_mode hostname
+}
+dns_off() {
+    [ -f "$DNSPREV" ] || return 0
+    m=$(sed -n 1p "$DNSPREV"); h=$(sed -n 2p "$DNSPREV")
+    if [ -z "$m" ] || [ "$m" = null ]; then settings delete global private_dns_mode >/dev/null
+    else settings put global private_dns_mode "$m"; fi
+    if [ -z "$h" ] || [ "$h" = null ]; then settings delete global private_dns_specifier >/dev/null
+    else settings put global private_dns_specifier "$h"; fi
+    rm -f "$DNSPREV"
+}
+
 down() {
     [ -f "$PIDF" ] && kill "$(cat "$PIDF")" 2>/dev/null; rm -f "$PIDF"
     steer_off
@@ -96,6 +118,7 @@ down() {
         ip $fam route flush table 5150 2>/dev/null
     done
     ip link del warp0 2>/dev/null
+    dns_off
     log "down"; echo "warp down"
 }
 
@@ -106,6 +129,7 @@ up() {
         echo "no WARP endpoint reachable, leaving routing alone"; down >/dev/null; exit 1
     fi
     steer_on
+    dns_on
     log "up via $ep"
     nohup "$0" _watchdog >/dev/null 2>&1 &
     echo $! > "$PIDF"

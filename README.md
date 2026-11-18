@@ -66,7 +66,7 @@ Runtime files in `~/warp`: `warp.log`, `singbox.log`, `sb-tun.json`. The account
 
 - It isn't started at boot. Tap the button or tile once after a reboot.
 - Exclude another uid: `su -c "WARP_EXCLUDE_UID=<uid> ~/warp/warp.sh up"` (defaults to Termux's uid).
-- DNS keeps using your network's resolver (queries to LAN resolvers bypass the tunnel). Set Private DNS to `one.one.one.one` if you want Cloudflare DNS too.
+- DNS: while WARP is on, Android's Private DNS is set to `one.one.one.one` (encrypted, through the tunnel). Your ISP/router resolver would otherwise bypass WARP and can block sites. Your previous Private DNS setting is restored on `down`. Opt out with `WARP_DNS=0`.
 
 ## License
 
