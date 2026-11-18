@@ -1,0 +1,13 @@
+app/out/
+*.apk
+*.jks
+*.keystore
+*.pass
+priv
+reg.json
+reg.json.tmp
+sb-*.json
+warp0.conf
+*.log
+*.pid
+*.idsig
