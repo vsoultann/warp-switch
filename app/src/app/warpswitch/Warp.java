@@ -16,7 +16,7 @@ final class Warp {
     static String run(String arg) {
         StringBuilder out = new StringBuilder();
         try {
-            Process p = new ProcessBuilder("su", "-c", SCRIPT + " " + arg).redirectErrorStream(true).start();
+            Process p = new ProcessBuilder("su", "--mount-master", "-c", SCRIPT + " " + arg).redirectErrorStream(true).start();
             try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
                 String l;
                 while ((l = r.readLine()) != null) out.append(l).append('\n');
