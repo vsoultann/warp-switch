@@ -104,6 +104,7 @@ public class MainActivity extends Activity {
         on = s.on();
         log.setText(s.raw.trim());
         if (!s.rootOk) { paint("No root", "Grant root to WARP Switch in your root manager (KernelSU / Magisk / APatch), then reopen.", 0xFFE53935); return; }
+        if (!s.setupOk) { paint("Not set up", "WARP files are missing on this phone. In Termux run: cd warp-switch && ./install.sh", 0xFFE53935); return; }
         if (on && s.warpOn) paint("On", "Exit IP " + s.ip + (s.colo.isEmpty() ? "" : "  ·  " + s.colo), 0xFFF38020);
         else if (on) paint("Reconnecting", "Tunnel up, waiting for Cloudflare…", 0xFFFFB300);
         else if (s.engine) paint("Paused", "WARP unreachable – apps use the direct connection", 0xFFFFB300);

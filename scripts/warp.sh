@@ -91,12 +91,24 @@ rules_base() {
 # Cloudflare (DNS-over-TLS through the tunnel); the previous setting is restored
 # on down. Disable with WARP_DNS=0.
 DNSPREV="$D/dns.prev"
+# Another VPN (Tailscale, a work VPN, ...) owns its apps' DNS. Forcing strict
+# Private DNS on top of it marks that VPN's DNS "broken" and every lookup fails.
+other_vpn() { dumpsys connectivity 2>/dev/null | grep -q 'ni{VPN CONNECTED'; }
+resolves() {
+    for i in 1 2 3 4 5 6 7 8; do
+        curl -s -m 3 -o /dev/null https://www.cloudflare.com/cdn-cgi/trace && return 0
+        sleep 1
+    done
+    return 1
+}
 dns_on() {
     [ "${WARP_DNS:-1}" = 1 ] || return 0
+    if other_vpn; then log "another VPN is active, leaving Private DNS alone"; return 0; fi
     [ -f "$DNSPREV" ] || printf '%s\n%s\n' "$(settings get global private_dns_mode)" \
         "$(settings get global private_dns_specifier)" > "$DNSPREV"
     settings put global private_dns_specifier one.one.one.one
     settings put global private_dns_mode hostname
+    if ! resolves; then dns_off; log "Private DNS didn't resolve, restored the previous setting"; fi
 }
 dns_off() {
     [ -f "$DNSPREV" ] || return 0
@@ -145,6 +157,20 @@ status() {
     curl -s -m 5 https://$PROBE/cdn-cgi/trace | grep -E '^(ip|colo|warp)='
     tail -5 "$LOG" 2>/dev/null
 }
+
+# Missing pieces (e.g. after moving to a new phone/ROM) show up in the app as
+# "Not set up" instead of a silent failure.
+setup_ok() {
+    miss=""
+    for b in sing-box jq curl; do command -v $b >/dev/null 2>&1 || miss="$miss $b"; done
+    [ -s "$D/reg.json" ] && [ -s "$D/priv" ] || miss="$miss account(reg.json/priv)"
+    [ -x "$D/mkconf.sh" ] || miss="$miss mkconf.sh"
+    [ -z "$miss" ] && return 0
+    echo "SETUP missing:$miss"
+    echo "In Termux: cd warp-switch && ./install.sh"
+    return 1
+}
+case "${1:-status}" in down|_watchdog) ;; *) setup_ok || exit 3 ;; esac
 
 case "${1:-status}" in
     up) up ;; down) down ;; _watchdog) watchdog ;; *) status ;;

@@ -8,7 +8,7 @@ final class Warp {
     static final String SCRIPT = "/data/data/com.termux/files/home/warp/warp.sh";
 
     static final class Status {
-        boolean engine, steering, warpOn, rootOk = true;
+        boolean engine, steering, warpOn, rootOk = true, setupOk = true;
         String ip = "", colo = "", raw = "";
         boolean on() { return engine && steering; }
     }
@@ -38,6 +38,8 @@ final class Warp {
             else if (l.equals("warp=on")) s.warpOn = true;
             else if (l.startsWith("ip=")) s.ip = l.substring(3);
             else if (l.startsWith("colo=")) s.colo = l.substring(5);
+            else if (l.startsWith("SETUP") || l.contains("No such file") || l.contains("not found")
+                    || l.contains("inaccessible")) s.setupOk = false;
             else if (l.startsWith("ERROR") || l.contains("Permission denied") || l.contains("not allowed")) s.rootOk = false;
         }
         return s;

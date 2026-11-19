@@ -48,7 +48,7 @@ su -c ~/warp/warp.sh status  # engine / routing / exit IP / log
 su -c ~/warp/warp.sh down    # stop
 ```
 
-The app shows **On** (with the exit IP and Cloudflare colo), **Reconnecting**, **Paused** (WARP unreachable, apps on the direct connection), or **Off**.
+The app shows **On** (with the exit IP and Cloudflare colo), **Reconnecting**, **Paused** (WARP unreachable, apps on the direct connection), **Off**, or **Not set up** (the `~/warp` files or packages are missing, e.g. after moving to a new phone or ROM: run `./install.sh` again).
 
 ## Files
 
@@ -67,6 +67,7 @@ Runtime files in `~/warp`: `warp.log`, `singbox.log`, `sb-tun.json`. The account
 - It isn't started at boot. Tap the button or tile once after a reboot.
 - Exclude another uid: `su -c "WARP_EXCLUDE_UID=<uid> ~/warp/warp.sh up"` (defaults to Termux's uid).
 - DNS: while WARP is on, Android's Private DNS is set to `one.one.one.one` (encrypted, through the tunnel). Your ISP/router resolver would otherwise bypass WARP and can block sites. Your previous Private DNS setting is restored on `down`. Opt out with `WARP_DNS=0`.
+  - If another VPN is active (Tailscale, a work VPN, ...), Private DNS is left alone: forcing it would break that VPN's DNS. It's also restored right away if lookups fail after switching.
 
 ## License
 
